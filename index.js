@@ -1,15 +1,14 @@
 require("dotenv").config();
 const express = require("express");
-const app = express();
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
-const port = process.env.PORT;
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const app = express();
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
 const uri = process.env.DATABASE_URL;
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -23,18 +22,44 @@ async function run() {
     await client.connect();
     const laundryMate = client.db("laundryMate");
     const userCollection = laundryMate.collection("userCollection");
+    const selectedItemsCollection = laundryMate.collection(
+      "selectedItemsCollection"
+    );
 
-    // Flowers routes
-    app.post("/flowers", async (req, res) => {
+    // user routes
+    app.post("/user", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
-      res.send(result);
+      res.status(201).send(result);
     });
 
-    app.get("/flowers", async (req, res) => {
-      const user = userCollection.find();
-      const result = await user.toArray();
-      res.send(result);
+    app.get("/user", async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+
+    // Login route
+    app.post("/login", async (req, res) => {
+      const { email, password } = req.body;
+      const user = await userCollection.findOne({ "user.email": email });
+
+      if (!user) {
+        return res.status(400).send({ message: "User not found" });
+      }
+      res.status(200).send({ message: "Login successful", user });
+    });
+
+    // selected items
+    app.post("/selectedItems", async (req, res) => {
+      const selectedItems = req.body;
+      const result = await selectedItemsCollection.insertOne(selectedItems);
+      res.status(201).send(result);
+    });
+
+    // selected items
+    app.get("/selectedItems", async (req, res) => {
+      const selectedItems = await selectedItemsCollection.find().toArray();
+      res.send(selectedItems);
     });
   } finally {
   }
@@ -47,5 +72,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("App is listening on port :", port);
+  console.log(`App is listening on port: ${port}`);
 });
