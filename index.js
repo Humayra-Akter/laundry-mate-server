@@ -23,6 +23,7 @@ async function run() {
     const laundryMate = client.db("laundryMate");
     const userCollection = laundryMate.collection("userCollection");
     const adminCollection = laundryMate.collection("adminCollection");
+    const paymentCollection = laundryMate.collection("paymentCollection");
     const selectedItemsCollection = laundryMate.collection(
       "selectedItemsCollection"
     );
@@ -32,10 +33,10 @@ async function run() {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.status(201).send(result);
-    }); 
-    
+    });
+
     // admin routes
-    app.post("/user", async (req, res) => {
+    app.post("/admin", async (req, res) => {
       const admin = req.body;
       const result = await adminCollection.insertOne(admin);
       res.status(201).send(result);
@@ -61,6 +62,13 @@ async function run() {
     app.post("/selectedItems", async (req, res) => {
       const selectedItems = req.body;
       const result = await selectedItemsCollection.insertOne(selectedItems);
+      res.status(201).send(result);
+    });
+
+    // payment
+    app.post("/payment", async (req, res) => {
+      const payment = req.body;
+      const result = await paymentCollection.insertOne(payment);
       res.status(201).send(result);
     });
 
