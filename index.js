@@ -23,10 +23,8 @@ async function run() {
     const laundryMate = client.db("laundryMate");
     const userCollection = laundryMate.collection("userCollection");
     const adminCollection = laundryMate.collection("adminCollection");
-    const paymentCollection = laundryMate.collection("paymentCollection");
-    const selectedItemsCollection = laundryMate.collection(
-      "selectedItemsCollection"
-    );
+    const orderCollection = laundryMate.collection("orderCollection");
+    const feedbackCollection = laundryMate.collection("feedbackCollection");
 
     // user routes
     app.post("/user", async (req, res) => {
@@ -47,6 +45,21 @@ async function run() {
       res.send(users);
     });
 
+    // Update user email
+    app.put("/user/email", async (req, res) => {
+      const { id, newEmail } = req.body;
+      const result = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { "user.email": newEmail } }
+      );
+
+      if (result.modifiedCount === 1) {
+        res.status(200).send({ message: "Email updated successfully" });
+      } else {
+        res.status(400).send({ message: "Failed to update email" });
+      }
+    });
+
     // Login route
     app.post("/login", async (req, res) => {
       const { email, password } = req.body;
@@ -58,24 +71,30 @@ async function run() {
       res.status(200).send({ message: "Login successful", user });
     });
 
-    // selected items
-    app.post("/selectedItems", async (req, res) => {
-      const selectedItems = req.body;
-      const result = await selectedItemsCollection.insertOne(selectedItems);
-      res.status(201).send(result);
-    });
-
-    // payment
-    app.post("/payment", async (req, res) => {
-      const payment = req.body;
-      const result = await paymentCollection.insertOne(payment);
+    // ordered items
+    app.post("/orderedItems", async (req, res) => {
+      const orderedItems = req.body;
+      const result = await orderCollection.insertOne(orderedItems);
       res.status(201).send(result);
     });
 
     // selected items
-    app.get("/selectedItems", async (req, res) => {
-      const selectedItems = await selectedItemsCollection.find().toArray();
-      res.send(selectedItems);
+    app.get("/orderedItems", async (req, res) => {
+      const orderedItems = await orderCollection.find().toArray();
+      res.send(orderedItems);
+    });
+
+    // feedback
+    app.post("/feedback", async (req, res) => {
+      const feedback = req.body;
+      const result = await feedbackCollection.insertOne(feedback);
+      res.status(201).send(result);
+    });
+
+    // feedback
+    app.get("/feedback", async (req, res) => {
+      const feedback = await feedbackCollection.find().toArray();
+      res.send(feedback);
     });
   } finally {
   }
