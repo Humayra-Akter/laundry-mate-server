@@ -40,6 +40,10 @@ async function run() {
       res.status(201).send(result);
     });
 
+
+
+
+
     app.get("/user", async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
