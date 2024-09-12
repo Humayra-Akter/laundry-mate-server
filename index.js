@@ -40,27 +40,46 @@ async function run() {
       res.status(201).send(result);
     });
 
-
-
-
-
     app.get("/user", async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
 
-    // Update user email
-    app.put("/user/email", async (req, res) => {
-      const { id, newEmail } = req.body;
-      const result = await userCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { "user.email": newEmail } }
-      );
+    // Update user password by email
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const { newPassword } = req.body;
 
-      if (result.modifiedCount === 1) {
-        res.status(200).send({ message: "Email updated successfully" });
-      } else {
-        res.status(400).send({ message: "Failed to update email" });
+      if (!newPassword) {
+        return res.status(400).send({ message: "New password is required." });
+      }
+
+      try {
+        // Find the user by email
+        const user = await userCollection.findOne({ "user.email": email });
+
+        if (!user) {
+          return res.status(404).send({ message: "User not found." });
+        }
+
+        // Update the user's password
+        const updatedUser = await userCollection.updateOne(
+          { "user.email": email }, // Filter
+          {
+            $set: { "user.password": newPassword }, // Update password
+          }
+        );
+
+        if (updatedUser.modifiedCount === 0) {
+          return res
+            .status(400)
+            .send({ message: "Failed to update password." });
+        }
+
+        res.status(200).send({ message: "Password updated successfully." });
+      } catch (error) {
+        console.error("Error updating password:", error);
+        res.status(500).send({ message: "Internal server error." });
       }
     });
 
